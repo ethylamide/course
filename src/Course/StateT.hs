@@ -36,7 +36,8 @@ newtype StateT s f a =
 -- [(3,0)]
 instance Functor f => Functor (StateT s f) where
   (<$>) :: (a -> b) -> StateT s f a -> StateT s f b
-  (<$>) = error "todo: Course.StateT (<$>)#instance (StateT s f)"
+  (<$>) f state = StateT $ \s -> let res = runStateT state s
+                                     in (\(a, st) -> (f a, st)) <$> res
 
 -- | Implement the `Apply` instance for @StateT s f@ given a @Bind f@.
 --
@@ -51,7 +52,9 @@ instance Functor f => Functor (StateT s f) where
 -- [(4,[0,1,2]),(5,[0,1,2])]
 instance Bind f => Apply (StateT s f) where
   (<*>) :: StateT s f (a -> b) -> StateT s f a -> StateT s f b
-  (<*>) = error "todo: Course.StateT (<*>)#instance (StateT s f)"
+  (<*>) f x = StateT $ \s -> let y = runStateT f s
+                             in join $ (\(g, fs) -> let z = runStateT x fs
+                                                    in (\(a, xs) -> (g a, xs)) <$> z) <$> y
 
 -- | Implement the `Applicative` instance for @StateT s f@ given a @Applicative f@.
 --
@@ -62,7 +65,7 @@ instance Bind f => Apply (StateT s f) where
 -- [(2,0)]
 instance Monad f => Applicative (StateT s f) where
   pure :: a -> StateT s f a
-  pure = error "todo: Course.StateT pure#instance (StateT s f)"
+  pure a = StateT $ \s -> pure (a, s)
 
 -- | Implement the `Bind` instance for @StateT s f@ given a @Monad f@.
 -- Make sure the state value is passed through in `bind`.
@@ -71,7 +74,8 @@ instance Monad f => Applicative (StateT s f) where
 -- ((),2)
 instance Monad f => Bind (StateT s f) where
   (=<<) :: (a -> StateT s f b) -> StateT s f a -> StateT s f b
-  (=<<) = error "todo: Course.StateT (=<<)#instance (StateT s f)"
+  (=<<) f x = StateT $ \s -> let y = runStateT x s
+                                 in join ((\(a, xs) -> runStateT (f a) xs) <$> y)
 
 instance Monad f => Monad (StateT s f) where
 
@@ -83,37 +87,42 @@ type State' s a = StateT s Id a
 -- >>> runStateT (state' $ runState $ put 1) 0
 -- Id ((),1)
 state' :: (s -> (a, s)) -> State' s a
-state' = error "todo: Course.StateT#state'"
+state' f = StateT $ \s -> pure (f s)
 
 -- | Provide an unwrapper for `State'` values.
 --
 -- >>> runState' (state' $ runState $ put 1) 0
 -- ((),1)
 runState' :: State' s a -> s -> (a, s)
-runState' = error "todo: Course.StateT#runState'"
+runState' st s = let (Id (a, s')) = runStateT st s
+                 in (a, s')
 
 -- | Run the `StateT` seeded with `s` and retrieve the resulting state.
 execT :: Functor f => StateT s f a -> s -> f s
-execT = error "todo: Course.StateT#execT"
+execT st s = let r = runStateT st s
+                 in (\(_, fs) -> fs) <$> r
 
 -- | Run the `State` seeded with `s` and retrieve the resulting state.
 exec' :: State' s a -> s -> s
-exec' = error "todo: Course.StateT#exec'"
+exec' st s = let  (_, rs) = runState' st s
+             in rs
 
 -- | Run the `StateT` seeded with `s` and retrieve the resulting value.
 evalT :: Functor f => StateT s f a -> s -> f a
-evalT = error "todo: Course.StateT#evalT"
+evalT st s = let r = runStateT st s
+             in (\(a, _) -> a) <$> r
 
 -- | Run the `State` seeded with `s` and retrieve the resulting value.
 eval' :: State' s a -> s -> a
-eval' = error "todo: Course.StateT#eval'"
+eval' st s = let (a, _) = runState' st s
+             in a
 
 -- | A `StateT` where the state also distributes into the produced value.
 --
 -- >>> (runStateT (getT :: StateT Int List Int) 3)
 -- [(3,3)]
 getT :: Monad f => StateT s f s
-getT = error "todo: Course.StateT#getT"
+getT = StateT $ \s -> pure (s, s)
 
 -- | A `StateT` where the resulting state is seeded with the given value.
 --
@@ -123,7 +132,7 @@ getT = error "todo: Course.StateT#getT"
 -- >>> runStateT (putT 2 :: StateT Int List ()) 0
 -- [((),2)]
 putT :: Monad f => s -> StateT s f ()
-putT = error "todo: Course.StateT#putT"
+putT s = StateT $ \_ -> pure ((), s)
 
 -- | Remove all duplicate elements in a `List`.
 --
@@ -131,7 +140,9 @@ putT = error "todo: Course.StateT#putT"
 --
 -- prop> distinct' xs == distinct' (flatMap (\x -> x :. x :. Nil) xs)
 distinct' :: (Ord a, Num a) => List a -> List a
-distinct' = error "todo: Course.StateT#distinct'"
+distinct' xs = eval' (filtering withSetState xs) S.empty
+  where
+    withSetState x = state' $ (\s -> (x `S.notMember` s, S.insert x s))
 
 -- | Remove all duplicate elements in a `List`.
 -- However, if you see a value greater than `100` in the list,
@@ -145,7 +156,11 @@ distinct' = error "todo: Course.StateT#distinct'"
 -- >>> distinctF $ listh [1,2,3,2,1,101]
 -- Empty
 distinctF :: (Ord a, Num a) => List a -> Optional (List a)
-distinctF = error "todo: Course.StateT#distinctF"
+distinctF xs = evalT (filtering withSetStateT xs) S.empty
+  where
+    withSetStateT :: (Num a, Ord a) => a -> StateT (S.Set a) Optional Bool
+    withSetStateT x = StateT $ \s -> if (x > 100) then Empty
+                                     else Full (x `S.notMember` s, S.insert x s)
 
 -- | An `OptionalT` is a functor of an `Optional` value.
 data OptionalT f a = OptionalT {
