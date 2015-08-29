@@ -164,5 +164,17 @@ distinct xs = eval (filtering withSetState xs) S.empty
 --
 -- >>> isHappy 44
 -- True
+
 isHappy :: Integer -> Bool
-isHappy = error "todo: Course.State#isHappy"
+isHappy = contains 1 .
+          firstRepeat .
+          produce (toInteger . sum . map ((P.^ 2) . digitToInt) . show')
+
+-- isHappy :: Integer -> Bool
+-- isHappy 1 = True
+-- isHappy 4   = False
+-- isHappy x = isHappy $ quadDigSum x
+--           where
+--             quadDigSum :: (Integral a, Show a) => a -> a
+--             quadDigSum num = let digits = map (P.fromIntegral . digitToInt) $ listh $ show num
+--                                  in foldLeft (+) 0 (map (P.^ 2) digits)
