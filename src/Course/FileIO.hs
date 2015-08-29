@@ -60,43 +60,32 @@ the contents of c
 -}
 
 -- /Tip:/ use @getArgs@ and @run@
-main ::
-  IO ()
-main =
-  error "todo: Course.FileIO#main"
+main :: IO ()
+main = (\(filename :. _) -> run filename ) =<< getArgs
 
-type FilePath =
-  Chars
+type FilePath = Chars
 
 -- /Tip:/ Use @getFiles@ and @printFiles@.
-run ::
-  Chars
-  -> IO ()
-run =
-  error "todo: Course.FileIO#run"
+run :: Chars -> IO ()
+-- run filename = printFiles =<< (getFiles =<< lines <$> (readFile filename))
+run filename = do
+  content <- readFile filename
+  files <- getFiles $ lines content
+  printFiles files
 
-getFiles ::
-  List FilePath
-  -> IO (List (FilePath, Chars))
-getFiles =
-  error "todo: Course.FileIO#getFiles"
+getFiles :: List FilePath -> IO (List (FilePath, Chars))
+getFiles paths = sequence $ map getFile paths
 
-getFile ::
-  FilePath
-  -> IO (FilePath, Chars)
-getFile =
-  error "todo: Course.FileIO#getFile"
+getFile :: FilePath -> IO (FilePath, Chars)
+-- getFile path = (\content -> pure (path, content)) =<< readFile path
+getFile path = do
+  content <- readFile path
+  return (path, content)
 
-printFiles ::
-  List (FilePath, Chars)
-  -> IO ()
-printFiles =
-  error "todo: Course.FileIO#printFiles"
+printFiles :: List (FilePath, Chars) -> IO ()
+printFiles xs = void $ sequence $ map (uncurry printFile) xs
 
-printFile ::
-  FilePath
-  -> Chars
-  -> IO ()
-printFile =
-  error "todo: Course.FileIO#printFile"
-
+printFile :: FilePath -> Chars -> IO ()
+printFile path content = do
+  putStrLn ("============" ++ path)
+  putStrLn content

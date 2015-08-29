@@ -14,30 +14,19 @@ import Course.List
 import Course.Optional
 
 -- | Eliminates any value over which a functor is defined.
-vooid ::
-  Functor m =>
-  m a
-  -> m ()
-vooid =
-  (<$>) (const ())
+vooid :: Functor m => m a -> m ()
+vooid = (<$>) (const ())
 
 -- | A version of @bind@ that ignores the result of the effect.
-(>-) ::
-  Monad m =>
-  m a
-  -> m b
-  -> m b
-(>-) a =
-  (>>=) a . const
+(>-) :: Monad m => m a -> m b -> m b
+(>-) a = (>>=) a . const
 
 -- | Runs an action until a result of that action satisfies a given predicate.
-untilM ::
-  Monad m =>
+untilM :: Monad m =>
   (a -> m Bool) -- ^ The predicate to satisfy to stop running the action.
   -> m a -- ^ The action to run until the predicate satisfies.
   -> m a
-untilM p a =
-  a >>= \r ->
+untilM p a = a >>= \r ->
   p r >>= \q ->
   if q
     then
@@ -46,10 +35,8 @@ untilM p a =
       untilM p a
 
 -- | Example program that uses IO to echo back characters that are entered by the user.
-echo ::
-  IO ()
-echo =
-  vooid (untilM
+echo :: IO ()
+echo = vooid (untilM
           (\c ->
             if c == 'q'
               then
@@ -63,8 +50,7 @@ echo =
            putStrLn (c :. Nil) >-
            pure c))
 
-data Op =
-  Op Char Chars (IO ()) -- keyboard entry, description, program
+data Op = Op Char Chars (IO ()) -- keyboard entry, description, program
 
 -- |
 --
@@ -81,10 +67,8 @@ data Op =
 -- /Tip:/ @putStr :: String -> IO ()@ -- Prints a string to standard output.
 --
 -- /Tip:/ @putStrLn :: String -> IO ()@ -- Prints a string and then a new line to standard output.
-convertInteractive ::
-  IO ()
-convertInteractive =
-  error "todo: Course.Interactive#convertInteractive"
+convertInteractive :: IO ()
+convertInteractive = error "todo: Course.Interactive#convertInteractive"
 
 -- |
 --
@@ -109,10 +93,8 @@ convertInteractive =
 -- /Tip:/ @putStr :: String -> IO ()@ -- Prints a string to standard output.
 --
 -- /Tip:/ @putStrLn :: String -> IO ()@ -- Prints a string and then a new line to standard output.
-reverseInteractive ::
-  IO ()
-reverseInteractive =
-  error "todo: Course.Interactive#reverseInteractive"
+reverseInteractive :: IO ()
+reverseInteractive = error "todo: Course.Interactive#reverseInteractive"
 
 -- |
 --
@@ -135,21 +117,17 @@ reverseInteractive =
 -- /Tip:/ @putStr :: String -> IO ()@ -- Prints a string to standard output.
 --
 -- /Tip:/ @putStrLn :: String -> IO ()@ -- Prints a string and then a new line to standard output.
-encodeInteractive ::
-  IO ()
-encodeInteractive =
-  error "todo: Course.Interactive#encodeInteractive"
+encodeInteractive :: IO ()
+encodeInteractive = error "todo: Course.Interactive#encodeInteractive"
 
-interactive ::
-  IO ()
-interactive =
-  let ops = (
-               Op 'c' "Convert a string to upper-case" convertInteractive
-            :. Op 'r' "Reverse a file" reverseInteractive
-            :. Op 'e' "Encode a URL" encodeInteractive
-            :. Op 'q' "Quit" (pure ())
-            :. Nil
-            )
+interactive :: IO ()
+interactive = let ops = (
+                    Op 'c' "Convert a string to upper-case" convertInteractive
+                    :. Op 'r' "Reverse a file" reverseInteractive
+                    :. Op 'e' "Encode a URL" encodeInteractive
+                    :. Op 'q' "Quit" (pure ())
+                    :. Nil
+                    )
   in vooid (untilM
              (\c ->
                if c == 'q'
