@@ -28,11 +28,11 @@ class Extend f => Comonad f where
 -- 7
 instance Comonad Id where
   copure :: Id a -> a
-  copure = error "todo: Course.Comonad copure#instance Id"
+  copure (Id a) = a
 
 -- | Witness that all things with (<<=) and copure also have (<$>).
 --
 -- >>> (+10) <$> Id 7
 -- Id 17
 (<$>) :: Comonad f => (a -> b) -> f a -> f b
-(<$>) = error "todo: Course.Comonad#(<$>)"
+(<$>) f a = (\v -> f (copure v)) <<= a

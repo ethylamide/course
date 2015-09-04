@@ -27,7 +27,7 @@ infixr 1 <<=
 -- Id (Id 7)
 instance Extend Id where
   (<<=) :: (Id a -> b) -> Id a -> Id b
-  (<<=) = error "todo: Course.Extend (<<=)#instance Id"
+  (<<=) f a = Id (f a)
 
 -- | Implement the @Extend@ instance for @List@.
 --
@@ -41,7 +41,9 @@ instance Extend Id where
 -- [[[4,5,6],[1,2,3]],[[4,5,6]]]
 instance Extend List where
   (<<=) :: (List a -> b) -> List a -> List b
-  (<<=) = error "todo: Course.Extend (<<=)#instance List"
+  (<<=) _ Nil = Nil
+  (<<=) f l@(_ :. xs) = let b = f l
+                        in b :. (f <<= xs)
 
 -- | Implement the @Extend@ instance for @Optional@.
 --
@@ -52,7 +54,8 @@ instance Extend List where
 -- Empty
 instance Extend Optional where
   (<<=) :: (Optional a -> b) -> Optional a -> Optional b
-  (<<=) = error "todo: Course.Extend (<<=)#instance Optional"
+  (<<=) _ Empty = Empty
+  (<<=) f (Full a) = Full (f (Full a))
 
 -- | Duplicate the functor using extension.
 --
@@ -68,4 +71,4 @@ instance Extend Optional where
 -- >>> cojoin Empty
 -- Empty
 cojoin :: Extend f => f a -> f (f a)
-cojoin = error "todo: Course.Extend#cojoin"
+cojoin a = id <<= a
