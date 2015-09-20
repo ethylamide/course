@@ -34,7 +34,7 @@ P p <.> i = case p i of
 -- >>> parse spaces "abc"
 -- Result >abc< ""
 spaces :: Parser Chars
-spaces = list (is ' ')
+spaces = list space
 
 -- | Write a function that applies the given parser, then parses 0 or more spaces,
 -- then produces the result of the original parser.
@@ -50,7 +50,7 @@ tok :: Parser a -> Parser a
 tok p = do
   v <- p
   spaces
-  pure v
+  return v
 
 -- | Write a function that parses the given char followed by 0 or more spaces.
 --
@@ -113,7 +113,7 @@ stringTok = tok . string
 -- >>> parse (option 'x' character) ""
 -- Result >< 'x'
 option :: a -> Parser a -> Parser a
-option v p = p ||| valueParser v
+option v p = p ||| pure v
 
 -- | Write a parser that parses 1 or more digits.
 --
@@ -190,7 +190,7 @@ between p1 p2 p = do
 -- >>> isErrorResult (parse (betweenCharTok '[' ']' character) "abc]")
 -- True
 betweenCharTok :: Char -> Char -> Parser a -> Parser a
-betweenCharTok c1 c2 p = between (is c1) (is c2) p
+betweenCharTok c1 c2 p = between (charTok c1) (charTok c2) p
 
 -- | Write a function that parses 4 hex digits and return the character value.
 --
@@ -234,7 +234,9 @@ hex = do
 -- >>> isErrorResult (parse hexu "u0axf")
 -- True
 hexu :: Parser Char
-hexu = is 'u' >>> hex
+hexu = do
+  is 'u'
+  hex
 
 -- | Write a function that produces a non-empty list of values coming off the given parser (which must succeed at least once),
 -- separated by the second given parser.
@@ -287,7 +289,7 @@ sepby pa ps = sepby1 pa ps ||| pure Nil
 eof :: Parser ()
 eof = P (\inp -> case inp of
                  Nil -> Result Nil ()
-                 _ -> ErrorResult Failed)
+                 c -> ErrorResult (ExpectedEof c))
 
 -- | Write a parser that produces a character that satisfies all of the given predicates.
 --
