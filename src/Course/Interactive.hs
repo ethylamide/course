@@ -68,7 +68,10 @@ data Op = Op Char Chars (IO ()) -- keyboard entry, description, program
 --
 -- /Tip:/ @putStrLn :: String -> IO ()@ -- Prints a string and then a new line to standard output.
 convertInteractive :: IO ()
-convertInteractive = error "todo: Course.Interactive#convertInteractive"
+convertInteractive = do
+  putStr "Enter a String to upper-case: "
+  str <- getLine
+  putStrLn $ map toUpper str
 
 -- |
 --
@@ -94,7 +97,13 @@ convertInteractive = error "todo: Course.Interactive#convertInteractive"
 --
 -- /Tip:/ @putStrLn :: String -> IO ()@ -- Prints a string and then a new line to standard output.
 reverseInteractive :: IO ()
-reverseInteractive = error "todo: Course.Interactive#reverseInteractive"
+reverseInteractive = do
+  putStr "Enter a file name to reverse: "
+  inputFilename <- getLine
+  content <- readFile inputFilename
+  putStr "Enter a String to output: "
+  outputFilename <- getLine
+  writeFile outputFilename (reverse content)
 
 -- |
 --
@@ -117,8 +126,16 @@ reverseInteractive = error "todo: Course.Interactive#reverseInteractive"
 -- /Tip:/ @putStr :: String -> IO ()@ -- Prints a string to standard output.
 --
 -- /Tip:/ @putStrLn :: String -> IO ()@ -- Prints a string and then a new line to standard output.
+
 encodeInteractive :: IO ()
-encodeInteractive = error "todo: Course.Interactive#encodeInteractive"
+encodeInteractive = do
+  putStr "Enter a string to url-encode: "
+  string <- getLine
+  putStrLn ((>>=) string (\c -> case c of
+                              ' '  -> "%20"
+                              '\t' -> "%09"
+                              '\"' -> "%22"
+                              _    -> (c :. Nil)))
 
 interactive :: IO ()
 interactive = let ops = (
