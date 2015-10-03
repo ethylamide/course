@@ -8,25 +8,20 @@ import Data.IORef(atomicModifyIORef)
 import Control.Applicative((<$), (<$>))
 import Control.Monad.Trans(MonadIO(..))
 
-type Chat a =
-  IORefLoop Integer a
+type Chat a = IORefLoop Integer a
 
-data ChatCommand =
-  Chat String
-  | Incr
-  | Unknown String
-  deriving (Eq, Show)
+data ChatCommand = Chat String
+                 | Incr
+                 | Unknown String
+                 deriving (Eq, Show)
 
-incr ::
-  Chat Integer
-incr =
-  do e <- readEnvval
-     liftIO $ atomicModifyIORef e (\n -> (n + 1, n + 1))
+incr :: Chat Integer
+incr = do
+  e <- readEnvval
+  liftIO $ atomicModifyIORef e (\n -> (n + 1, n + 1))
 
-chat ::
-  IO a
-chat =
-  iorefLoop 0 (readIOEnvval >>= pPutStrLn . show) (process . chatCommand)
+chat :: IO a
+chat = iorefLoop 0 (readIOEnvval >>= pPutStrLn . show) (process . chatCommand)
 
 -- |
 --
@@ -41,17 +36,11 @@ chat =
 --
 -- >>> chatCommand "Nothing"
 -- UNKNOWN "Nothing"
-chatCommand ::
-  String
-  -> ChatCommand
-chatCommand z =
-  Unknown z `fromMaybe` msum [
-                               Chat <$> trimPrefixThen "CHAT" z
-                             , Incr <$ trimPrefixThen "INCR" z
-                             ]
+chatCommand :: String -> ChatCommand
+chatCommand z = Unknown z `fromMaybe` msum [
+    Chat <$> trimPrefixThen "CHAT" z
+  , Incr <$ trimPrefixThen "INCR" z
+  ]
 
-process ::
-  ChatCommand
-  -> Chat ()
-process =
-  error "todo"
+process :: ChatCommand -> Chat ()
+process = error "todo"

@@ -4,4 +4,3 @@ module Network.Server
 ) where
 
 import Network.Server.Common
-
